@@ -283,6 +283,33 @@ function App() {
     }
   };
 
+  const handleResetToFactory = async () => {
+    const confirmReset = window.confirm(
+      "Are you absolutely sure you want to reset to factory settings? This will clear all current settings, inventory, business partners, and transactions, and restore the original default test data."
+    );
+    if (!confirmReset) return;
+
+    try {
+      await invoke("reset_to_factory");
+      showToast("success", "Database successfully reset to factory defaults!");
+      
+      loadBakeryProfile();
+      loadItems("");
+      loadBusinesses("Supplier", "");
+      setPosCart([]);
+      setPosHeldOrders([]);
+      refreshDashboard();
+      
+      if (currentView === "daybook") {
+        loadDayBook();
+      } else if (currentView === "stock") {
+        loadStockStatus();
+      }
+    } catch (err) {
+      showToast("danger", "Failed to reset to factory: " + err);
+    }
+  };
+
   const loadItems = async (search: string) => {
     try {
       const data: Item[] = await invoke("get_items", { searchQuery: search });
@@ -2030,11 +2057,16 @@ function App() {
               <div style={{ background: "var(--bg-surface)", border: "1px solid rgba(179, 57, 57, 0.2)", borderRadius: "var(--radius-md)", padding: "28px" }}>
                 <h3 style={{ color: "var(--danger)", fontSize: "16px", fontWeight: "700", marginBottom: "8px" }}>Danger Zone</h3>
                 <p style={{ color: "var(--text-muted)", fontSize: "13px", marginBottom: "20px", lineHeight: "1.5" }}>
-                  Ready to start official billing? This action will permanently delete all test data (inventory items, business partners, purchases, and sales transactions) to initialize the database for clean usage.
+                  Perform system maintenance actions here. Clearing test data initializes the database for clean usage, while resetting to factory defaults restores all original demo items and transactions.
                 </p>
-                <button type="button" className="btn" style={{ background: "var(--danger)", color: "var(--text-light)" }} onClick={handleClearData}>
-                  Clear Test Data & Get Started
-                </button>
+                <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                  <button type="button" className="btn" style={{ background: "var(--danger)", color: "var(--text-light)" }} onClick={handleClearData}>
+                    Clear Test Data & Get Started
+                  </button>
+                  <button type="button" className="btn btn-secondary" style={{ border: "1px solid var(--danger)", color: "var(--danger)" }} onClick={handleResetToFactory}>
+                    Reset to Factory Defaults
+                  </button>
+                </div>
               </div>
             </div>
           )}

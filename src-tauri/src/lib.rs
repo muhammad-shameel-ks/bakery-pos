@@ -52,7 +52,8 @@ pub fn run() {
             commands::get_business_ledger,
             commands::select_export_path,
             commands::write_binary_file,
-            commands::clear_all_data
+            commands::clear_all_data,
+            commands::reset_to_factory
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

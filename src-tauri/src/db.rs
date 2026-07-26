@@ -336,7 +336,7 @@ pub fn init_db(db_path: PathBuf) -> Result<Connection> {
     Ok(conn)
 }
 
-fn seed_data(conn: &Connection) -> Result<()> {
+pub fn seed_data(conn: &Connection) -> Result<()> {
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
     // Seed Bakery Profile

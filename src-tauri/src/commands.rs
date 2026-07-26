@@ -1125,3 +1125,26 @@ pub fn clear_all_data(state: State<'_, DbState>) -> Result<(), String> {
     tx.commit().map_err(map_err)?;
     Ok(())
 }
+
+#[tauri::command]
+pub fn reset_to_factory(state: State<'_, DbState>) -> Result<(), String> {
+    let mut conn = state.conn.lock().map_err(map_err)?;
+    let tx = conn.transaction().map_err(map_err)?;
+    
+    tx.execute("DELETE FROM purchase_lines", []).map_err(map_err)?;
+    tx.execute("DELETE FROM purchase_headers", []).map_err(map_err)?;
+    tx.execute("DELETE FROM retail_sale_lines", []).map_err(map_err)?;
+    tx.execute("DELETE FROM retail_sale_headers", []).map_err(map_err)?;
+    tx.execute("DELETE FROM b2b_sale_lines", []).map_err(map_err)?;
+    tx.execute("DELETE FROM b2b_sale_headers", []).map_err(map_err)?;
+    tx.execute("DELETE FROM items", []).map_err(map_err)?;
+    tx.execute("DELETE FROM business_parties", []).map_err(map_err)?;
+    tx.execute("DELETE FROM bakery_profile", []).map_err(map_err)?;
+    
+    tx.execute("DELETE FROM sqlite_sequence WHERE name IN ('purchase_headers', 'purchase_lines', 'retail_sale_headers', 'retail_sale_lines', 'b2b_sale_headers', 'b2b_sale_lines', 'items', 'business_parties', 'bakery_profile')", []).map_err(map_err)?;
+    
+    crate::db::seed_data(&tx).map_err(map_err)?;
+    
+    tx.commit().map_err(map_err)?;
+    Ok(())
+}
