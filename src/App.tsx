@@ -103,6 +103,12 @@ interface HeldOrder {
   lines: CartItem[];
 }
 
+const getLocalDateString = (d: Date = new Date()) => {
+  const offset = d.getTimezoneOffset();
+  const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+  return localDate.toISOString().slice(0, 10);
+};
+
 function App() {
   const [currentView, setCurrentView] = useState<string>("dashboard");
   const [theme, setTheme] = useState<string>("light");
@@ -142,7 +148,7 @@ function App() {
   // --- B2B BILLING STATES ---
   const [b2bSelectedParty, setB2bSelectedParty] = useState<number>(0);
   const [b2bInvoiceNo, setB2bInvoiceNo] = useState<string>("");
-  const [b2bDate, setB2bDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [b2bDate, setB2bDate] = useState<string>(getLocalDateString());
   const [b2bPaymentMode, setB2bPaymentMode] = useState<string>("UPI");
   const [b2bNotes, setB2bNotes] = useState<string>("");
   const [b2bReceivedAmount, setB2bReceivedAmount] = useState<number>(0);
@@ -151,15 +157,15 @@ function App() {
   // --- PURCHASE BILLING STATES ---
   const [purSelectedParty, setPurSelectedParty] = useState<number>(0);
   const [purInvoiceNo, setPurInvoiceNo] = useState<string>("");
-  const [purDate, setPurDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [purDate, setPurDate] = useState<string>(getLocalDateString());
   const [purPaymentMode, setPurPaymentMode] = useState<string>("UPI");
   const [purNotes, setPurNotes] = useState<string>("");
   const [purPaidAmount, setPurPaidAmount] = useState<number>(0);
   const [purCart, setPurCart] = useState<CartItem[]>([]);
 
   // --- REPORTS STATES ---
-  const [daybookFromDate, setDaybookFromDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [daybookToDate, setDaybookToDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [daybookFromDate, setDaybookFromDate] = useState<string>(getLocalDateString());
+  const [daybookToDate, setDaybookToDate] = useState<string>(getLocalDateString());
   const [daybookRows, setDaybookRows] = useState<DayBookRow[]>([]);
   
   const [ledgerSelectedParty, setLedgerSelectedParty] = useState<number>(0);
@@ -385,7 +391,7 @@ function App() {
     }));
 
     const invoiceNo = "RET-" + Date.now();
-    const date = new Date().toISOString().slice(0, 10);
+    const date = getLocalDateString();
 
     const saleDto = {
       invoice_no: invoiceNo,
@@ -725,7 +731,7 @@ function App() {
       XLSX.utils.book_append_sheet(wb, b2bWS, "B2B Invoices");
 
       // Write File
-      XLSX.writeFile(wb, `Bakery_POS_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      XLSX.writeFile(wb, `Bakery_POS_Export_${getLocalDateString()}.xlsx`);
       showToast("success", "Spreadsheet saved successfully!");
     } catch (err) {
       showToast("danger", "Failed to compile Excel workbook: " + err);
@@ -739,7 +745,7 @@ function App() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      days.push(d.toISOString().slice(0, 10));
+      days.push(getLocalDateString(d));
     }
     
     // We will placeholder or check dynamic days.

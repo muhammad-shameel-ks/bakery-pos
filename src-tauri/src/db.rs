@@ -337,6 +337,8 @@ pub fn init_db(db_path: PathBuf) -> Result<Connection> {
 }
 
 fn seed_data(conn: &Connection) -> Result<()> {
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
     // Seed Bakery Profile
     conn.execute(
         "INSERT OR IGNORE INTO bakery_profile (id, name, gstin, address, phone, email, logo_base64, invoice_note) 
@@ -366,8 +368,8 @@ fn seed_data(conn: &Connection) -> Result<()> {
     // Seed a Purchase Inward
     conn.execute(
         "INSERT INTO purchase_headers (invoice_no, date, business_party_id, payment_mode, notes, subtotal, tax_total, grand_total, paid_amount)
-         VALUES ('PUR-001', '2026-07-26', 1, 'UPI', 'Opening stock raw material', 2000.0, 100.0, 2100.0, 2100.0);",
-        [],
+         VALUES ('PUR-001', ?, 1, 'UPI', 'Opening stock raw material', 2000.0, 100.0, 2100.0, 2100.0);",
+        [&today],
     )?;
     conn.execute(
         "INSERT INTO purchase_lines (purchase_header_id, item_id, quantity, rate, tax_rate)
@@ -378,8 +380,8 @@ fn seed_data(conn: &Connection) -> Result<()> {
     // Seed a Retail Sale
     conn.execute(
         "INSERT INTO retail_sale_headers (invoice_no, date, customer_name, payment_mode, subtotal, tax_total, grand_total, received_amount)
-         VALUES ('RET-001', '2026-07-26', 'Walk-in Customer', 'Cash', 137.28, 22.72, 160.0, 160.0);",
-        [],
+         VALUES ('RET-001', ?, 'Walk-in Customer', 'Cash', 137.28, 22.72, 160.0, 160.0);",
+        [&today],
     )?;
     conn.execute(
         "INSERT INTO retail_sale_lines (retail_sale_header_id, item_id, quantity, rate, tax_rate)
@@ -390,8 +392,8 @@ fn seed_data(conn: &Connection) -> Result<()> {
     // Seed a B2B Sale
     conn.execute(
         "INSERT INTO b2b_sale_headers (invoice_no, date, business_party_id, payment_mode, notes, subtotal, tax_total, grand_total, received_amount)
-         VALUES ('INV-001', '2026-07-26', 2, 'Card', 'Event delivery', 2110.16, 389.84, 2500.0, 2000.0);",
-        [],
+         VALUES ('INV-001', ?, 2, 'Card', 'Event delivery', 2110.16, 389.84, 2500.0, 2000.0);",
+        [&today],
     )?;
     conn.execute(
         "INSERT INTO b2b_sale_lines (b2b_sale_header_id, item_id, quantity, rate, tax_rate)
