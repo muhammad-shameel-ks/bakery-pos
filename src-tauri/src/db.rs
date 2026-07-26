@@ -163,12 +163,20 @@ pub struct B2BSaleHeader {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WeeklySales {
+    pub date: String,
+    pub retail: f64,
+    pub b2b: f64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DashboardData {
     pub today_retail: f64,
     pub today_b2b: f64,
     pub today_purchase: f64,
     pub stock_value: f64,
     pub low_stock_items: Vec<StockStatus>,
+    pub weekly_sales: Vec<WeeklySales>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

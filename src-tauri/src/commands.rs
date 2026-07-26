@@ -103,12 +103,42 @@ pub fn get_dashboard_data(state: State<'_, DbState>) -> Result<DashboardData, St
         }
     }
 
+    // 5. Weekly Sales (last 7 days)
+    let mut weekly_sales = Vec::new();
+    for i in (0..7).rev() {
+        let day = Local::now() - chrono::Duration::days(i);
+        let day_str = day.format("%Y-%m-%d").to_string();
+
+        let retail: f64 = conn
+            .query_row(
+                "SELECT COALESCE(SUM(grand_total), 0) FROM retail_sale_headers WHERE date = ?",
+                [&day_str],
+                |r| r.get(0),
+            )
+            .unwrap_or(0.0);
+
+        let b2b: f64 = conn
+            .query_row(
+                "SELECT COALESCE(SUM(grand_total), 0) FROM b2b_sale_headers WHERE date = ?",
+                [&day_str],
+                |r| r.get(0),
+            )
+            .unwrap_or(0.0);
+
+        weekly_sales.push(crate::db::WeeklySales {
+            date: day_str,
+            retail,
+            b2b,
+        });
+    }
+
     Ok(DashboardData {
         today_retail,
         today_b2b,
         today_purchase,
         stock_value,
         low_stock_items,
+        weekly_sales,
     })
 }
 

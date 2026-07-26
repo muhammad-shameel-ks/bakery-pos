@@ -61,12 +61,19 @@ interface StockStatus {
   reorder_level: number;
 }
 
+interface WeeklySales {
+  date: string;
+  retail: number;
+  b2b: number;
+}
+
 interface DashboardData {
   today_retail: number;
   today_b2b: number;
   today_purchase: number;
   stock_value: number;
   low_stock_items: StockStatus[];
+  weekly_sales: WeeklySales[];
 }
 
 interface DayBookRow {
@@ -122,7 +129,7 @@ function App() {
   
   // Dynamic States
   const [dashboardData, setDashboardData] = useState<DashboardData>({
-    today_retail: 0, today_b2b: 0, today_purchase: 0, stock_value: 0, low_stock_items: []
+    today_retail: 0, today_b2b: 0, today_purchase: 0, stock_value: 0, low_stock_items: [], weekly_sales: []
   });
   const [stockStatus, setStockStatus] = useState<StockStatus[]>([]);
   
@@ -859,7 +866,6 @@ function App() {
     }
   };
 
-  // --- SVG PLOTTING CHART HELPERS ---
   const getWeeklyDashboardSales = () => {
     // Generate dates for the last 7 days
     const days = [];
@@ -869,15 +875,12 @@ function App() {
       days.push(getLocalDateString(d));
     }
     
-    // We will placeholder or check dynamic days.
-    // For a fully functional dashboard, let's map today's values dynamically and place realistic offsets
-    return days.map((day, idx) => {
+    return days.map((day) => {
       const label = new Date(day).toLocaleDateString(undefined, { weekday: "short" });
-      const isToday = idx === 6;
+      const dataForDay = dashboardData.weekly_sales?.find(s => s.date === day);
       
-      // Dynamic for today, static-like for previous days (so it is wowed and offline ready)
-      const retail = isToday ? dashboardData.today_retail : (idx * 150 + 200) % 800;
-      const b2b = isToday ? dashboardData.today_b2b : (idx * 250 + 100) % 950;
+      const retail = dataForDay ? dataForDay.retail : 0;
+      const b2b = dataForDay ? dataForDay.b2b : 0;
       
       return {
         day,
