@@ -731,10 +731,78 @@ function App() {
       XLSX.utils.book_append_sheet(wb, b2bWS, "B2B Invoices");
 
       // Write File
-      XLSX.writeFile(wb, `Bakery_POS_Export_${getLocalDateString()}.xlsx`);
-      showToast("success", "Spreadsheet saved successfully!");
+      await saveWorkbookWithDialog(wb, `Bakery_POS_Export_${getLocalDateString()}.xlsx`);
     } catch (err) {
       showToast("danger", "Failed to compile Excel workbook: " + err);
+    }
+  };
+
+  const saveWorkbookWithDialog = async (wb: XLSX.WorkBook, defaultName: string) => {
+    try {
+      const filePath = await invoke<string | null>("select_export_path", { defaultName });
+      if (!filePath) {
+        showToast("danger", "Export cancelled.");
+        return;
+      }
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const dataArray = new Uint8Array(excelBuffer);
+      await invoke("write_binary_file", { path: filePath, data: Array.from(dataArray) });
+      showToast("success", "Spreadsheet saved successfully!");
+    } catch (err) {
+      showToast("danger", "Failed to save Excel workbook: " + err);
+    }
+  };
+
+  const exportDayBookToExcel = async () => {
+    try {
+      if (daybookRows.length === 0) {
+        showToast("danger", "No day book data to export.");
+        return;
+      }
+      showToast("success", "Exporting Day Book, please select location...");
+      
+      const wb = XLSX.utils.book_new();
+      
+      const excelRows = daybookRows.map(r => ({
+        "Date": r.date,
+        "Module Details": r.module,
+        "Reference No": r.ref_no,
+        "Business Client / Guest": r.party_name,
+        "Payment Mode": r.payment_mode,
+        "Debit Payments (₹)": r.debit,
+        "Credit Receipts (₹)": r.credit
+      }));
+
+      const totalDebit = daybookRows.reduce((sum, r) => sum + r.debit, 0);
+      const totalCredit = daybookRows.reduce((sum, r) => sum + r.credit, 0);
+      const netFlow = totalCredit - totalDebit;
+
+      excelRows.push({
+        "Date": "Total",
+        "Module Details": "",
+        "Reference No": "",
+        "Business Client / Guest": "",
+        "Payment Mode": "",
+        "Debit Payments (₹)": totalDebit,
+        "Credit Receipts (₹)": totalCredit
+      });
+
+      excelRows.push({
+        "Date": "Net Flow",
+        "Module Details": "",
+        "Reference No": "",
+        "Business Client / Guest": "",
+        "Payment Mode": "",
+        "Debit Payments (₹)": netFlow >= 0 ? 0 : Math.abs(netFlow),
+        "Credit Receipts (₹)": netFlow >= 0 ? netFlow : 0
+      });
+
+      const ws = XLSX.utils.json_to_sheet(excelRows);
+      XLSX.utils.book_append_sheet(wb, ws, "Day Book");
+
+      await saveWorkbookWithDialog(wb, `Bakery_DayBook_Export_${daybookFromDate}_to_${daybookToDate}.xlsx`);
+    } catch (err) {
+      showToast("danger", "Failed to compile Day Book Excel: " + err);
     }
   };
 
@@ -775,7 +843,7 @@ function App() {
       {/* Toast Alert */}
       {toast && (
         <div style={{
-          position: "fixed", top: "24px", right: "24px", zIndex: 999
+          position: "fixed", bottom: "24px", right: "24px", zIndex: 999
         }} className={`alert-banner ${toast.type === "success" ? "success" : "danger"}`}>
           {toast.message}
         </div>
@@ -1519,6 +1587,9 @@ function App() {
                 </div>
                 <button className="btn btn-secondary" style={{ marginTop: "24px" }} onClick={loadDayBook}>
                   <RefreshCw size={16} /> Reload
+                </button>
+                <button className="btn btn-primary" style={{ marginTop: "24px" }} onClick={exportDayBookToExcel} disabled={daybookRows.length === 0}>
+                  <Download size={16} /> Export Day Book
                 </button>
               </div>
 

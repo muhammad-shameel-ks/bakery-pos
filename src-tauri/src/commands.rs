@@ -1091,3 +1091,17 @@ pub fn get_business_ledger(state: State<'_, DbState>, party_id: i32) -> Result<V
 
     Ok(final_rows)
 }
+
+#[tauri::command]
+pub fn select_export_path(default_name: String) -> Option<String> {
+    let result = rfd::FileDialog::new()
+        .set_file_name(&default_name)
+        .add_filter("Excel Worksheet", &["xlsx"])
+        .save_file();
+    result.map(|path| path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub fn write_binary_file(path: String, data: Vec<u8>) -> Result<(), String> {
+    std::fs::write(&path, data).map_err(|e| e.to_string())
+}
