@@ -257,6 +257,32 @@ function App() {
     }
   };
 
+  const handleClearData = async () => {
+    const confirmClear = window.confirm(
+      "Are you absolutely sure you want to delete all test data? This will clear all products, partners, purchases, and sales transactions to start official billing."
+    );
+    if (!confirmClear) return;
+
+    try {
+      await invoke("clear_all_data");
+      showToast("success", "All test data successfully cleared! You can now start officially.");
+      
+      loadItems("");
+      loadBusinesses("Supplier", "");
+      setPosCart([]);
+      setPosHeldOrders([]);
+      refreshDashboard();
+      
+      if (currentView === "daybook") {
+        loadDayBook();
+      } else if (currentView === "stock") {
+        loadStockStatus();
+      }
+    } catch (err) {
+      showToast("danger", "Failed to clear data: " + err);
+    }
+  };
+
   const loadItems = async (search: string) => {
     try {
       const data: Item[] = await invoke("get_items", { searchQuery: search });
@@ -1960,43 +1986,56 @@ function App() {
 
           {/* ==================== BAKERY SETTINGS VIEW ==================== */}
           {currentView === "settings" && (
-            <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", padding: "28px", maxWidth: "700px" }}>
-              <form onSubmit={saveBakeryProfile}>
-                <div className="form-group" style={{ marginBottom: "16px" }}>
-                  <label>Bakery Store Name</label>
-                  <input type="text" className="form-control" value={bakeryProfile.name} onChange={e => setBakeryProfile({ ...bakeryProfile, name: e.target.value })} required />
-                </div>
-
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Store GSTIN Identifier</label>
-                    <input type="text" className="form-control" value={bakeryProfile.gstin} onChange={e => setBakeryProfile({ ...bakeryProfile, gstin: e.target.value })} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px", maxWidth: "700px", width: "100%" }}>
+              <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", padding: "28px" }}>
+                <form onSubmit={saveBakeryProfile}>
+                  <div className="form-group" style={{ marginBottom: "16px" }}>
+                    <label>Bakery Store Name</label>
+                    <input type="text" className="form-control" value={bakeryProfile.name} onChange={e => setBakeryProfile({ ...bakeryProfile, name: e.target.value })} required />
                   </div>
-                  <div className="form-group">
-                    <label>Telephone Contact No</label>
-                    <input type="text" className="form-control" value={bakeryProfile.phone} onChange={e => setBakeryProfile({ ...bakeryProfile, phone: e.target.value })} />
+
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Store GSTIN Identifier</label>
+                      <input type="text" className="form-control" value={bakeryProfile.gstin} onChange={e => setBakeryProfile({ ...bakeryProfile, gstin: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Telephone Contact No</label>
+                      <input type="text" className="form-control" value={bakeryProfile.phone} onChange={e => setBakeryProfile({ ...bakeryProfile, phone: e.target.value })} />
+                    </div>
                   </div>
-                </div>
 
-                <div className="form-group" style={{ marginBottom: "16px" }}>
-                  <label>Email Address</label>
-                  <input type="email" className="form-control" value={bakeryProfile.email} onChange={e => setBakeryProfile({ ...bakeryProfile, email: e.target.value })} />
-                </div>
+                  <div className="form-group" style={{ marginBottom: "16px" }}>
+                    <label>Email Address</label>
+                    <input type="email" className="form-control" value={bakeryProfile.email} onChange={e => setBakeryProfile({ ...bakeryProfile, email: e.target.value })} />
+                  </div>
 
-                <div className="form-group" style={{ marginBottom: "16px" }}>
-                  <label>Postal Address</label>
-                  <textarea rows={3} value={bakeryProfile.address} onChange={e => setBakeryProfile({ ...bakeryProfile, address: e.target.value })} />
-                </div>
+                  <div className="form-group" style={{ marginBottom: "16px" }}>
+                    <label>Postal Address</label>
+                    <textarea rows={3} value={bakeryProfile.address} onChange={e => setBakeryProfile({ ...bakeryProfile, address: e.target.value })} />
+                  </div>
 
-                <div className="form-group" style={{ marginBottom: "20px" }}>
-                  <label>Default Invoice Note (Footer)</label>
-                  <textarea rows={3} value={bakeryProfile.invoice_note} onChange={e => setBakeryProfile({ ...bakeryProfile, invoice_note: e.target.value })} />
-                </div>
+                  <div className="form-group" style={{ marginBottom: "20px" }}>
+                    <label>Default Invoice Note (Footer)</label>
+                    <textarea rows={3} value={bakeryProfile.invoice_note} onChange={e => setBakeryProfile({ ...bakeryProfile, invoice_note: e.target.value })} />
+                  </div>
 
-                <button type="submit" className="btn btn-primary">
-                  <Save size={16} /> Save Configuration
+                  <button type="submit" className="btn btn-primary">
+                    <Save size={16} /> Save Configuration
+                  </button>
+                </form>
+              </div>
+
+              {/* Danger Zone / Start Official */}
+              <div style={{ background: "var(--bg-surface)", border: "1px solid rgba(179, 57, 57, 0.2)", borderRadius: "var(--radius-md)", padding: "28px" }}>
+                <h3 style={{ color: "var(--danger)", fontSize: "16px", fontWeight: "700", marginBottom: "8px" }}>Danger Zone</h3>
+                <p style={{ color: "var(--text-muted)", fontSize: "13px", marginBottom: "20px", lineHeight: "1.5" }}>
+                  Ready to start official billing? This action will permanently delete all test data (inventory items, business partners, purchases, and sales transactions) to initialize the database for clean usage.
+                </p>
+                <button type="button" className="btn" style={{ background: "var(--danger)", color: "var(--text-light)" }} onClick={handleClearData}>
+                  Clear Test Data & Get Started
                 </button>
-              </form>
+              </div>
             </div>
           )}
 

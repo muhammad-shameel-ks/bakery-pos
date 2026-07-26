@@ -1105,3 +1105,23 @@ pub fn select_export_path(default_name: String) -> Option<String> {
 pub fn write_binary_file(path: String, data: Vec<u8>) -> Result<(), String> {
     std::fs::write(&path, data).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn clear_all_data(state: State<'_, DbState>) -> Result<(), String> {
+    let mut conn = state.conn.lock().map_err(map_err)?;
+    let tx = conn.transaction().map_err(map_err)?;
+    
+    tx.execute("DELETE FROM purchase_lines", []).map_err(map_err)?;
+    tx.execute("DELETE FROM purchase_headers", []).map_err(map_err)?;
+    tx.execute("DELETE FROM retail_sale_lines", []).map_err(map_err)?;
+    tx.execute("DELETE FROM retail_sale_headers", []).map_err(map_err)?;
+    tx.execute("DELETE FROM b2b_sale_lines", []).map_err(map_err)?;
+    tx.execute("DELETE FROM b2b_sale_headers", []).map_err(map_err)?;
+    tx.execute("DELETE FROM items", []).map_err(map_err)?;
+    tx.execute("DELETE FROM business_parties", []).map_err(map_err)?;
+    
+    tx.execute("DELETE FROM sqlite_sequence WHERE name IN ('purchase_headers', 'purchase_lines', 'retail_sale_headers', 'retail_sale_lines', 'b2b_sale_headers', 'b2b_sale_lines', 'items', 'business_parties')", []).map_err(map_err)?;
+    
+    tx.commit().map_err(map_err)?;
+    Ok(())
+}

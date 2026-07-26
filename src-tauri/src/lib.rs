@@ -51,7 +51,8 @@ pub fn run() {
             commands::get_stock_status,
             commands::get_business_ledger,
             commands::select_export_path,
-            commands::write_binary_file
+            commands::write_binary_file,
+            commands::clear_all_data
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
