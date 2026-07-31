@@ -1,4 +1,4 @@
-name: opencode
+name: opencode review
 
 on:
   issue_comment:
@@ -7,27 +7,38 @@ on:
     types: [created]
 
 jobs:
-  opencode:
+  review:
     if: |
-      contains(github.event.comment.body, ' /oc') ||
-      startsWith(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, ' /opencode') ||
-      startsWith(github.event.comment.body, '/opencode')
+      contains(github.event.comment.body, '/oc') ||
+      contains(github.event.comment.body, '/opencode')
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
-      id-token: write
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          fetch-depth: 1
           persist-credentials: false
 
-      - name: Run opencode
+      - name: Run opencode review
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: opencode-go/mimo-v2.5
+          use_github_token: true
+          prompt: |
+            Review this pull request thoroughly for code quality, bugs, security issues, and style problems.
+
+            Focus on:
+            - Security vulnerabilities (SQL injection, command injection, hardcoded secrets)
+            - Bugs and logic errors
+            - Missing error handling
+            - Code quality issues
+
+            Provide a concise code review. Do not make changes to the repository.
